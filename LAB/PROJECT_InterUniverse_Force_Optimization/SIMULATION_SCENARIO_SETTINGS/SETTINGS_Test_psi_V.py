@@ -19,8 +19,12 @@ def chosenV(grid, Vmax=20, k_super=6,
     return Vmax*cnp.exp(-cnp.abs((grid[:,:,0]-xbarrier)/widthxbar)**k_super)*Vy
 
 # Initial Wavefunction
-def psi0(x,y, mus=[-2,0], sigmas=[1,2], ps=[5,0], hbar=1):
-    return 1/(sigmas[0]*cnp.sqrt(2*cnp.pi))**0.5*cnp.exp(-(x-mus[0])**2/(4*sigmas[0]**2))*\
-            1/(sigmas[1]*cnp.sqrt(2*cnp.pi))**0.5*cnp.exp(-(y-mus[1])**2/(4*sigmas[1]**2))*\
-                cnp.exp(1j*(ps[0]*x+ps[1]*y)/hbar)
+mus = cnp.array([-2,0])
+sigmas = cnp.array([1,2])
+ps = cnp.array([5,0])
+
+def psi0(grid, mus=mus, sigmas=sigmas, ps=ps, hbar=1):
+    # grid is [Nx,Ny,.., n]
+    return np.prod(1/(sigmas*np.sqrt(2*np.pi))**0.5*cnp.exp(-(grid-mus)**2/(4*sigmas**2))*cnp.exp(1j*(ps*grid)/hbar), axis=-1, dtype=cnp.csingle)
+
 

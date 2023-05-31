@@ -10,7 +10,7 @@ import sys
 if use_cuda_numpy:
     import cupy as cnp
     import cupyx.scipy as csp
-    import cupyx.scipy.linalg as clg
+    import cupyx.scipy.sparse.linalg as clg
 
 else:
     import numpy as cnp
@@ -20,11 +20,15 @@ else:
 
 # ROUTINES ###########################################
 #Discretized Hamiltonian as a Sparse Matrix
-def cuda_get_discrete_U_L(Nx, Ny, dx, dy, xs, ys, dt, mx, my, hbar):
+def cuda_get_discrete_U_L(Nx, Ny, dx, dy, dt, mx, my, hbar):
+    # it is faster to prepare the diagonals with cpu and then transfer them to gpu
+    # since the implementation is very sequential as it is
+    # all arguments expected to be in cpu
+    # but returned sparse matrix is in gpu
     main_diagonal = 1+1j*dt*0.5*hbar*(1/dx**2/mx+1/dy**2/my)*cnp.ones(Nx*Ny, dtype=complex_dtype)
     for i in range(Nx):
         for j in range(Ny):
-            main_diagonal[j*Nx+i] += 1j*dt*V(xs[i], ys[j])/2/hbar
+            main_diagonal[j*Nx+i] += 1j*dt*V_ij[i,j]/2/hbar
     x_diagonals = -1j*dt*hbar/(4*mx*dx**2)*cnp.ones(Nx*Ny-1, dtype=complex_dtype)
     y_diagonals = -1j*dt*hbar/(4*my*dy**2)*cnp.ones(Nx*(Ny-1), dtype=complex_dtype)
     # There are some zeros we need to place in these diagonals
@@ -33,8 +37,7 @@ def cuda_get_discrete_U_L(Nx, Ny, dx, dy, xs, ys, dt, mx, my, hbar):
 
     return csp.sparse.diags( diagonals=
         (main_diagonal, x_diagonals, x_diagonals,y_diagonals, y_diagonals),
-        offsets=cnp.array([0, 1, -1, Nx, -Nx]), dtype=complex_dtype,format='csc')
-
+        offsets=np.array([0, 1, -1, Nx, -Nx]), dtype=complex_dtype,format='csc')
 
 if __name__ == "__main__":
     # SIMULATION PARAMETERS ##################################
@@ -83,7 +86,7 @@ if __name__ == "__main__":
     dx,dy = dxs
 
     #Create coordinates at which the solution will be calculated
-    nodes = [np.linspace(xlowers[j], xuppers[j], Ns[j]) for j in range(2)] # (xs, ys)
+    nodes = [cnp.linspace(xlowers[j], xuppers[j], Ns[j]) for j in range(2)] # (xs, ys)
     xs,ys = nodes
 
     # SIMULATION SCENRAIO AND INITIAL STATE #################################
@@ -92,16 +95,15 @@ if __name__ == "__main__":
         module=importlib.import_module(path_to_psi_and_potential.split('SETTINGS/')[-1])
         psi0 = getattr(module, 'psi0')
         chosenV = getattr(module, 'chosenV')
-        V = lambda x,y: chosenV(np.array([[[x,y]]]))
     except:
         raise AssertionError ("psi0 and chosenV functions not correctly defined in the given file!")
     # PREPARE ARRAYS FOR SIMULATION #########################################
+    grid=cnp.array(cnp.meshgrid(*nodes)).T #[Nx,Ny, 2]
+    V_ij = chosenV(grid)
     psi = cnp.zeros(Nx*Ny, dtype=complex_dtype)
-
-    for i in range(Nx):
-        for j in range(Ny):
-            psi[j*Nx+i] = psi0(nodes[0][i], nodes[1][j])
-    U_L = cuda_get_discrete_U_L(*Ns, *dxs, *nodes, dt, *ms, hbar)
+    psi = psi0(grid).flatten('F')
+    # propagator ######################
+    U_L = cuda_get_discrete_U_L(*Ns, *dxs, dt, *ms, hbar)
     U_R = U_L.conj()
     UL_LUdec = clg.splu( U_L )
 
@@ -112,7 +114,7 @@ if __name__ == "__main__":
     pdf0 = pdf0/pdf0.sum() # normalize strictly
 
     # sample randomly
-    initial_trajs_idx = np.random.choice( pdf0.shape[0],
+    initial_trajs_idx = cnp.random.choice( pdf0.shape[0],
                 replace=True, size=(numTrajs), p=pdf0 ) #[numTrajs] indices
     # need to convert them to positions
     j_s = initial_trajs_idx//Nx
@@ -126,27 +128,29 @@ if __name__ == "__main__":
 
     trajs = cnp.zeros((numTrajs, 4)) #[numTrajs, 4 -2posit2momt]
     for tr, (i, j) in enumerate(zip(i_s,j_s)):
-        trajs[tr, :2] = [nodes[0][i], nodes[1][j]]
+        trajs[tr, 0] = nodes[0][i]
+        trajs[tr, 1] = nodes[1][j]
 
-    dxs = cnp.array(dxs)[cnp.newaxis,:]
-    Ns = cnp.array(Ns)[cnp.newaxis, :]
-    xlowers = cnp.array(xlowers)[cnp.newaxis, :]
-    xuppers = cnp.array(xuppers)[cnp.newaxis, :]
-    ms = cnp.array(ms)[cnp.newaxis, :]
+    cdxs = cnp.array(dxs)[cnp.newaxis,:]
+    cNs = cnp.array(Ns)[cnp.newaxis, :]
+    cxlowers = cnp.array(xlowers)[cnp.newaxis, :]
+    cxuppers = cnp.array(xuppers)[cnp.newaxis, :]
+    cms = cnp.array(ms)[cnp.newaxis, :]
 
     # SANITY ##############################
-    # Chosen Potential and Trajectories Plot for initial time
-    every=3 # Only take one data point every this number in each axis to plot potential
-    grid=np.array(np.meshgrid(*nodes)).swapaxes(-2,-1)[:,::every, ::every] #[2,Nx::ev,Ny]
-    potential_field = chosenV(np.moveaxis(grid, 0, -1))
+    # Chosen Potential and Trajectories Plot for intial time
+    if use_cuda_numpy:
+        V_ij=cnp.asnumpy(V_ij)
+        trajs_numpy = cnp.asnumpy(trajs)
+    else:
+        trajs_numpy = trajs
 
     fig = plt.figure(figsize=(5,5))
     ax = fig.add_subplot(111)
-    colormap = ax.imshow(potential_field.T,
-                 extent=[xlowers[0,0], xuppers[0,0], xlowers[0,1], xuppers[0,1]]
-                         , origin='lower',cmap='hot_r')
-    #plt.axis(aspect='image');
-    ax.scatter(trajs[:,0], trajs[:,1], c="black", s=2,alpha=1)
+    colormap = ax.imshow(V_ij.T,
+             extent=[xlowers[0], xuppers[0], xlowers[1], xuppers[1]]
+                     , origin='lower',cmap='hot_r')
+    ax.scatter(trajs_numpy[:,0], trajs_numpy[:,1], c="black", s=2,alpha=1)
     fig.colorbar(colormap, fraction=0.04, location='right')
     ax.set_xlabel("x")
     ax.set_ylabel("y")
@@ -164,12 +168,13 @@ if __name__ == "__main__":
     # Time Iteration LOOP #####################################3
     ############################################################
     ############################################################
-    dpsi_dx = cnp.zeros(Ns[0], dtype=complex_dtype)
-    dpsi_dy = cnp.zeros(Ns[0], dtype=complex_dtype)
+
+    dpsi_dx = cnp.zeros(Ns, dtype=complex_dtype)
+    dpsi_dy = cnp.zeros(Ns, dtype=complex_dtype)
     p = cnp.zeros(dpsi_dx.shape+(2, ), dtype=real_dtype) #[ Nx, Ny, 2]
 
     for it, t in enumerate(ts):
-        psi_tensor = psi.reshape(Ns[0,::-1]).swapaxes(0,-1) #[Nx,Ny]
+        psi_tensor = psi.reshape(Ns[::-1]).swapaxes(0,-1) #[Nx,Ny]
 
         # BOHMIAN MOMENTUM FIELD #####################################
         # first the gradient of the wavefunction at each point
@@ -193,7 +198,6 @@ if __name__ == "__main__":
         # rest with O(dx**4) centered difference
         dpsi_dy[:,2:-2] = (-psi_tensor[:,4:]+8*psi_tensor[:,3:-1]-8*psi_tensor[:,1:-3]+psi_tensor[:,:-4])/(12*dy)
 
-
         # px, py, pz
         p[:,:,0] = hbar*(dpsi_dx/psi_tensor).imag
         p[:,:,1] = hbar*(dpsi_dy/psi_tensor).imag
@@ -202,11 +206,11 @@ if __name__ == "__main__":
         # MOMENTUM ON TRAJS TRAJS ##################################################
         # if no trajectory surpasses below the node 0 or J-1 at any time,
         # traj will always be among (0,J-1) and traj//dxs will be among [0,J-1]
-        trajs_idxs = (((trajs[:,:2]-xlowers)//dxs).T).astype(cnp.uint) # [2, numTrajs] the closest index from below along each axis
+        trajs_idxs = (((trajs[:,:2]-cxlowers)//cdxs).T).astype(cnp.uint) # [2, numTrajs] the closest index from below along each axis
         # relative distance to the closest index from below point along each dimension
         # the closer, the bigger its weight should be for the trajectory propagation
-        ratx_down = ((trajs[:,0]-xs[ trajs_idxs[0] ])/(xs[ trajs_idxs[0]+1 ]-xs[ trajs_idxs[0] ]))[:,np.newaxis]
-        raty_down = ((trajs[:,1]-ys[ trajs_idxs[1] ])/(ys[ trajs_idxs[1]+1 ]-ys[ trajs_idxs[1] ]))[:,np.newaxis]
+        ratx_down = ((trajs[:,0]-xs[ trajs_idxs[0] ])/(xs[ trajs_idxs[0]+1 ]-xs[ trajs_idxs[0] ]))[:,cnp.newaxis]
+        raty_down = ((trajs[:,1]-ys[ trajs_idxs[1] ])/(ys[ trajs_idxs[1]+1 ]-ys[ trajs_idxs[1] ]))[:,cnp.newaxis]
         # Interpolate momentum
         trajs[:,2:] = ratx_down*raty_down* p[ trajs_idxs[0]+1, trajs_idxs[1]+1 ] +\
             (1-ratx_down)*raty_down* p[ trajs_idxs[0], trajs_idxs[1]+1] +\
@@ -220,34 +224,39 @@ if __name__ == "__main__":
             pdf = (psi_tensor.conj()*psi_tensor).real
             # Approximate the norm
             #print(f"   Iteration {it} Approx.Norm = {pdf.sum()*dx*dy:.4}")
-
-            #pdf = cnp.asnumpy(pdf)
-            #trajs_numpy = cnp.asnumpy(trajs)
-            trajs_numpy = trajs
-
+            if use_cuda_numpy:
+                pdf = cnp.asnumpy(pdf)
+                trajs_numpy = cnp.asnumpy(trajs)
+                p_numpy = cnp.asnumpy(p)
+            else:
+                trajs_numpy = trajs
+                p_numpy = p
             np.save(f"{outputs_directory}/SE_2D/{ID_string}/pdf/pdf_it_{it}.npy",
                     pdf, allow_pickle=True) #[Nx,Ny]
             np.save(f"{outputs_directory}/SE_2D/{ID_string}/trajs/trajs_it_{it}.npy",
                     trajs_numpy, allow_pickle=True) #[numTrajs, 4]
             np.save(f"{outputs_directory}/SE_2D/{ID_string}/moms/momentum_field_it_{it}.npy",
-                    p, allow_pickle=True) #[Nx,Ny, 2]
+                    p_numpy, allow_pickle=True) #[Nx,Ny, 2]
         # NEXT TIME ITERATION POSITIONS ##############################################
         # Evolve trajectories using the interpolated momentum field
-        trajs[:,:2] = trajs[:,:2] + dt*trajs[:,2:]/ms #[numTrajs, 4]
+        trajs[:,:2] = trajs[:,:2] + dt*trajs[:,2:]/cms #[numTrajs, 4]
 
         # Those trajectories that get out of bounds should bounce back by the amount they got out
-        trajs[:,:2] = cnp.where( trajs[:,:2]>xuppers, xuppers-(trajs[:,:2]-xuppers) ,trajs[:,:2] )
-        trajs[:,:2] = cnp.where( trajs[:,:2]<xlowers, xlowers+(xlowers-trajs[:,:2]) ,trajs[:,:2] )
+        while(cnp.any(trajs[:,:numDofUniv]>=cxuppers) or cnp.any(trajs[:,:numDofUniv]<=cxlowers)):
+            trajs[:,:2] = cnp.where( trajs[:,:2]>cxuppers, cxuppers-(trajs[:,:2]-cxuppers) ,trajs[:,:2] )
+            trajs[:,:2] = cnp.where( trajs[:,:2]<cxlowers, cxlowers+(cxlowers-trajs[:,:2]) ,trajs[:,:2] )
 
         # NEXT PSI ####################################################
         # compute the next time iteration's wavefunction
         U_Rpsi_prev = U_R@psi # this is the vector b in Ax=b
         psi = UL_LUdec.solve(U_Rpsi_prev)
 
+
     # Free Space ######
     if use_cuda_numpy:
         cnp.get_default_memory_pool().free_all_blocks()
         cnp.get_default_pinned_memory_pool().free_all_blocks()
+        nodes = [cnp.asnumpy(nodel) for nodel in nodes]
 
     # Generate max 5 frames as a sanity check, equispaced ##################
     number_of_outputs = int(numIts//outputEvery)
@@ -261,7 +270,6 @@ if __name__ == "__main__":
     grid=np.array(np.meshgrid(*nodes)).swapaxes(-2,-1)[:,::every, ::every] #[2,Nx::ev,Ny]
     #print(grid.shape)
     #print(f"Using a mesh in the plot of {grid.shape}")
-    traj_cs=np.arange(len(trajs))/len(trajs)
     fig = plt.figure( figsize=(14,7))
     for it, t in zip( np.arange(len(ts))[::outputEvery][::skip], ts[::outputEvery][::skip]):
         #print(f"\n > It {it}/{numIts}")
@@ -281,14 +289,14 @@ if __name__ == "__main__":
         ax.set_zlabel("Probability Density")
         ax.set_title(f"Probability Density it={it} t={t:.4}")
         cset = ax.contour(grid[0], grid[1], pdf, 7, zdir='x',
-                          offset=xlowers[0,0], cmap='RdYlBu', vmax=maxim, vmin=minim)
+                          offset=xlowers[0], cmap='RdYlBu', vmax=maxim, vmin=minim)
         cset = ax.contour(grid[0], grid[1], pdf, 7, zdir='y',
-                          offset=xuppers[0,1], cmap='RdYlBu', vmax=maxim, vmin=minim)
+                          offset=xuppers[1], cmap='RdYlBu', vmax=maxim, vmin=minim)
 
         # PDF + TRAJECTORIES ##############################################
         ax = fig.add_subplot(122)
         colormap = ax.imshow(pdf.T,
-             extent=[xlowers[0,0], xuppers[0,0], xlowers[0,1], xuppers[0,1]]
+             extent=[xlowers[0], xuppers[0], xlowers[1], xuppers[1]]
                              , origin='lower',cmap='RdYlBu')
         #plt.axis(aspect='image');
         fig.colorbar(colormap, fraction=0.04, location='right')
