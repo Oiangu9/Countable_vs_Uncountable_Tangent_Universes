@@ -44,10 +44,10 @@ if __name__ == "__main__":
     args = sys.argv # The path to the settings file should be given
     ##print("Input arguments", sys.argv)
     assert len(args)==5, "Paths or experiment name not given correctly!"
-    ID_string = args[1]
-    path_to_settings = args[2]
-    path_to_psi_and_potential=args[3]
-    outputs_directory = args[4]
+    ID_string = str(args[1])
+    path_to_settings = str(args[2])
+    path_to_psi_and_potential=str(args[3])
+    outputs_directory = str(args[4])
     ''' Expected arguments:
     - ID for the output directroy naming
     - path to the settings file for the simulation
@@ -86,8 +86,8 @@ if __name__ == "__main__":
     dx,dy,dz = dxs
 
     #Create coordinates at which the solution will be calculated
-    nodes = [cnp.linspace(xlowers[j], xuppers[j], Ns[j]) for j in range(2)] # (xs, ys)
-    xs,ys = nodes
+    nodes = [cnp.linspace(xlowers[j], xuppers[j], Ns[j]) for j in range(3)] # (xs, ys)
+    xs,ys,zs = nodes
 
     # SIMULATION SCENRAIO AND INITIAL STATE #################################
     try:
@@ -100,7 +100,7 @@ if __name__ == "__main__":
         raise AssertionError ("psi0 and chosenV functions not correctly defined in the given file!")
     # PREPARE ARRAYS FOR SIMULATION #########################################
     grid=cnp.moveaxis(cnp.array(np.meshgrid(*nodes)).swapaxes(1,2),0,-1) #[Nx,Ny,Nz,3]
-    V_ijk = chosenV(grid))
+    V_ijk = chosenV(grid)
 
     psi = cnp.zeros(Nx*Ny*Nz, dtype=complex_dtype)
     psi = psi0(grid).flatten('F')
@@ -170,7 +170,7 @@ if __name__ == "__main__":
     ax.scatter(trajs_numpy[:,0], trajs_numpy[:,1], trajs_numpy[:,2], c="black", s=3,
                 alpha=1)
     os.makedirs(f"{outputs_directory}/SE_3D/{ID_string}/figs/", exist_ok=True)
-    image=f"./OUTPUTS/TISE_3D/{exp_name}/figs/energy_potential.png"
+    image=f"{outputs_directory}/SE_3D/{ID_string}/figs/energy_potential.png"
     plt.savefig(image, dpi=150)
 
     # Propagator #################################################
@@ -191,7 +191,7 @@ if __name__ == "__main__":
     p = cnp.zeros(dpsi_dx.shape+(3, ), dtype=real_dtype) #[3, Nx, Ny, Nz]
 
     for it, t in enumerate(ts):
-        psi_tensor = psi.reshape(Ns[::-1]).swapaxes(0,-1) #[Nx,Ny,Nz]
+        psi_tensor = psi.reshape(Ns[::-1]).swapaxes(0,-1)+1e-10 #[Nx,Ny,Nz]
 
         # BOHMIAN MOMENTUM FIELD #####################################
         # first the gradient of the wavefunction at each point
@@ -276,8 +276,8 @@ if __name__ == "__main__":
         trajs[:, :3] = trajs[:,:3] + dt*trajs[:,3:]/cms #[numTrajs, 3]
 
         # Those trajectories that get out of bounds should bounce back by the amount they got out
-        while(cnp.any(trajs[:,:numDofUniv]>=cxuppers) or cnp.any(trajs[:,:numDofUniv]<=cxlowers)):
-            trajs[:,:3] = cnp.where( trajs[:,:3]>cxuppers, cxuppers-(trajs[:,:3]-cxuppers) ,trajs[:,:3] )
+        while(cnp.any(trajs[:,:numDofUniv]>=cxuppers) or cnp.any(trajs[:,:numDofUniv]<cxlowers)):
+            trajs[:,:3] = cnp.where( trajs[:,:3]>=cxuppers, cxuppers-(trajs[:,:3]-cxuppers)-1e-10 ,trajs[:,:3] ) # if trajs==xupper or lower need a bit of a push extra
             trajs[:,:3] = cnp.where( trajs[:,:3]<cxlowers, cxlowers+(cxlowers-trajs[:,:3]) ,trajs[:,:3] )
 
         # NEXT PSI ####################################################
@@ -299,16 +299,15 @@ if __name__ == "__main__":
 
     image_paths = []
     dpi = 100
-
+    # Generate Santiy check frames jic
     every=1 # Only take one data point every this number in each axis to plot
-grid=np.array(np.meshgrid(*nodes)).swapaxes(1,2)[:,::every, ::every, ::every] #[3,Nx,Ny,Nz]
-#print(f"Using a mesh in the plot of {grid.shape}")
-fig = plt.figure( figsize=(21,7))
+    grid=np.array(np.meshgrid(*nodes)).swapaxes(1,2)[:,::every, ::every, ::every] #[3,Nx,Ny,Nz]
+    #print(f"Using a mesh in the plot of {grid.shape}")
+    fig = plt.figure( figsize=(21,7))
 
-plt.style.use('dark_background')
+    plt.style.use('dark_background')
 
-for it, t in enumerate(ts):
-    if it%outputEvery==0:
+    for it, t in zip( np.arange(len(ts))[::outputEvery][::skip], ts[::outputEvery][::skip]):
         #print(f"\n > It {it}/{numIts}")
         fig.clf()
         pdf = np.load(f"{outputs_directory}/SE_3D/{ID_string}/pdf/pdf_it_{it}.npy")

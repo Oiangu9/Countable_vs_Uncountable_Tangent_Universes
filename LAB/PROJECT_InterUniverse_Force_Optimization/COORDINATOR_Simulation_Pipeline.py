@@ -40,7 +40,7 @@ if __name__ == "__main__":
         done = []
     else:
         with open(f"./OUTPUTS/{exp_name}/STATE.txt", 'r') as f:
-            done = [ID for ID in f.readline().split("DoneSimulations ")[1].split('[')[1].split(']')[0].split(',')]
+            done = [ID.replace(" ", "").replace("'", "") for ID in f.readline().split("DoneSimulations ")[1].split('[')[1].split(']')[0].split(',')]
     # generate the IDs of the processes to do
     to_do = []
     arguments_for_workers = []
@@ -48,7 +48,7 @@ if __name__ == "__main__":
         to_do.append(f"Reference_SE_Simulation")
         arguments_for_workers.append(("Reference_SE_Simulation", f"SIMULATOR_{dim}D_CN_Schrodinger_Equation.py",
             f"Reference_SE_Simulation {path_to_settings} {path_to_psi_and_potential} {f'./OUTPUTS/{exp_name}/'}"))
-        reference_traj_npy_file = f"./OUTPUTS/{exp_name}/SE_2D/Reference_SE_Simulation/trajs/trajs_it_0.npy"
+        reference_traj_npy_file = f"./OUTPUTS/{exp_name}/SE_{dim}D/Reference_SE_Simulation/trajs/trajs_it_0.npy"
     for K in Ks_to_try:
         for A in As_to_try:
             ID = f"K_{K:.4}_A_{A:.4}"
@@ -65,24 +65,30 @@ if __name__ == "__main__":
     pool = mp.Pool(num_workers)
     result_tickets = []
     for arguments_for_worker in arguments_for_workers:
-        print(arguments_for_worker)
+        #print(arguments_for_worker)
         result_tickets.append( pool.apply_async( run_simulator_and_return_ID, arguments_for_worker ) )
 
-    while len(done)!=len(to_do):
+    wait= 10 # number of seconds to wait till re-check if ready
+    t=0
+    while len(done)!=numK*numA+1:
         for result_ticket, ID in zip(result_tickets, to_do):
             if ID not in done and result_ticket.ready():
-                print(f" Done ID {ID}!")
+                print(f"t={t}s Done ID {ID}!")
                 done.append( ID )
                 with open(f"./OUTPUTS/{exp_name}/STATE.txt", 'w') as f:
                     f.write(f"DoneSimulations {done}")
-            print('done',done, 'todo',to_do)
+        print(f"t={t}s")
+        #print('done',done, 'todo',to_do)
         # wait a little more (3 mins)
-        time.sleep(10)
+        t+=wait
+        time.sleep(wait)
 
 
     for result_ticket in result_tickets:
         result_ticket.wait()
     pool.close()
     pool.join()
-    # we remove the state file now that it has finished
+    # we remove the state file now that it has finished and place a done flag
     os.remove(f"./OUTPUTS/{exp_name}/STATE.txt")
+    with open(f"./OUTPUTS/{exp_name}/FINISHED.txt", 'w') as f:
+        f.write(f"{exp_name} done in t={t} s={t/60:.3} min={t/3600:.3} h\n")

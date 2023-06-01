@@ -44,10 +44,10 @@ if __name__ == "__main__":
     args = sys.argv # The path to the settings file should be given
     #print("Input arguments", sys.argv)
     assert len(args)==5, "Paths or experiment name not given correctly!"
-    ID_string = args[1]
-    path_to_settings = args[2]
-    path_to_psi_and_potential=args[3]
-    outputs_directory = args[4]
+    ID_string = str(args[1])
+    path_to_settings = str(args[2])
+    path_to_psi_and_potential=str(args[3])
+    outputs_directory = str(args[4])
     ''' Expected arguments:
     - ID for the output directroy naming
     - path to the settings file for the simulation
@@ -242,8 +242,8 @@ if __name__ == "__main__":
         trajs[:,:2] = trajs[:,:2] + dt*trajs[:,2:]/cms #[numTrajs, 4]
 
         # Those trajectories that get out of bounds should bounce back by the amount they got out
-        while(cnp.any(trajs[:,:numDofUniv]>=cxuppers) or cnp.any(trajs[:,:numDofUniv]<=cxlowers)):
-            trajs[:,:2] = cnp.where( trajs[:,:2]>cxuppers, cxuppers-(trajs[:,:2]-cxuppers) ,trajs[:,:2] )
+        while(cnp.any(trajs[:,:numDofUniv]>=cxuppers) or cnp.any(trajs[:,:numDofUniv]<cxlowers)):
+            trajs[:,:2] = cnp.where( trajs[:,:2]>=cxuppers, cxuppers-(trajs[:,:2]-cxuppers)-1e-10 ,trajs[:,:2] )
             trajs[:,:2] = cnp.where( trajs[:,:2]<cxlowers, cxlowers+(cxlowers-trajs[:,:2]) ,trajs[:,:2] )
 
         # NEXT PSI ####################################################

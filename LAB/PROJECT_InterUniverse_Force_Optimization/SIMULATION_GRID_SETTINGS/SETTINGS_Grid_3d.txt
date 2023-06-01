@@ -1,0 +1,5 @@
+numK 2
+numA 2
+Krange [1, 2]
+Arange [0, 1]
+dim 3

@@ -152,13 +152,13 @@ if __name__ == "__main__":
     args = sys.argv # The path to the settings file should be given
     ##print("Input arguments", sys.argv)
     assert len(args)==8, "Paths or experiment name not given correctly!"
-    ID_string = args[1] #
-    path_to_settings = args[2]
-    path_to_psi_and_potential=args[3]
-    outputs_directory = args[4]
+    ID_string = str(args[1]) #
+    path_to_settings = str(args[2])
+    path_to_psi_and_potential=str(args[3])
+    outputs_directory = str(args[4])
     A = float(args[5])
     K = float(args[6])
-    reference_traj_npy_file = args[7]
+    reference_traj_npy_file = str(args[7])
     ''' Expected arguments:
     - ID of the execution, for the directory names
     - path to the settings file for the simulation
@@ -187,8 +187,8 @@ if __name__ == "__main__":
         qs = [float(x) for x in f.readline().split("qs ")[1].split('[')[1].split(']')[0].split(',')]
         dt = float(f.readline().split("dt_Newt ")[1])
         Ns_potential = [int(x) for x in f.readline().split("Ns_Newt_pot ")[1].split('[')[1].split(']')[0].split(',')]
-        use_Coulomb_potential = bool(int(f.readline().split("use_Coulomb_potential ")[1]))
-        use_scenario_potential = bool(int(f.readline().split("use_scenario_potential ")[1]))
+        use_Coulomb_potential = bool(int(f.readline().split("use_Coulomb_potential_Newt ")[1]))
+        use_scenario_potential = bool(int(f.readline().split("use_scenario_potential_Newt ")[1]))
         sigma = float(f.readline().split("sigma_pdf_estimation ")[1])
 
     # Tricks to match the output frames - DO NOT EDIT THIS!
@@ -486,9 +486,9 @@ if __name__ == "__main__":
         trajs[:, numDofUniv:] = trajs[:,numDofUniv:]+forces*dt
 
         # Those trajectories that get out of bounds should bounce back by the amount they got out
-        while(np.any(trajs[:,:numDofUniv]>xuppers) or np.any(trajs[:,:numDofUniv]<xlowers)):
-            trajs[:,:numDofUniv] = cnp.where( trajs[:,:numDofUniv]>xuppers,
-                                xuppers-(trajs[:,:numDofUniv]-xuppers) ,trajs[:,:numDofUniv] )
+        while(np.any(trajs[:,:numDofUniv]>=xuppers) or np.any(trajs[:,:numDofUniv]<xlowers)):
+            trajs[:,:numDofUniv] = cnp.where( trajs[:,:numDofUniv]>=xuppers,
+                                xuppers-(trajs[:,:numDofUniv]-xuppers)-1e-10 ,trajs[:,:numDofUniv] )
             trajs[:,:numDofUniv] = cnp.where( trajs[:,:numDofUniv]<xlowers,
                                 xlowers+(xlowers-trajs[:,:numDofUniv]) ,trajs[:,:numDofUniv] )
 

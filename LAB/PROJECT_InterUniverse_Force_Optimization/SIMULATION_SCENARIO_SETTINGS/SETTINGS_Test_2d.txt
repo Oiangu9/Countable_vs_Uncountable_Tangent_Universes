@@ -15,7 +15,7 @@ K_coulomb 1
 qs [1,1]
 dt_Newt 0.001
 Ns_Newt_pot [200,200]
-use_Coulomb_potential 0
-use_scenario_potential 0
+use_Coulomb_potential_Newt 0
+use_scenario_potential_Newt 0
 sigma_pdf_estimation 1
 
