@@ -352,7 +352,7 @@ if __name__ == "__main__":
                                 units='inches')
             fig.colorbar(fcolormap, fraction=0.04, location='right', label="force mag")
 
-            os.makedirs(f"{outputs_directory}/MIW/{ID_string}//figs/", exist_ok=True)
+            os.makedirs(f"{outputs_directory}/MIW/{ID_string}/figs/", exist_ok=True)
             imagep=f"{outputs_directory}/MIW/{ID_string}/figs/energy_potential.png"
             plt.savefig(imagep, dpi=160)
 
@@ -486,11 +486,16 @@ if __name__ == "__main__":
         trajs[:, numDofUniv:] = trajs[:,numDofUniv:]+forces*dt
 
         # Those trajectories that get out of bounds should bounce back by the amount they got out
-        while(np.any(trajs[:,:numDofUniv]>=xuppers) or np.any(trajs[:,:numDofUniv]<xlowers)):
-            trajs[:,:numDofUniv] = cnp.where( trajs[:,:numDofUniv]>=xuppers,
-                                xuppers-(trajs[:,:numDofUniv]-xuppers)-1e-10 ,trajs[:,:numDofUniv] )
-            trajs[:,:numDofUniv] = cnp.where( trajs[:,:numDofUniv]<xlowers,
-                                xlowers+(xlowers-trajs[:,:numDofUniv]) ,trajs[:,:numDofUniv] )
+        patience = 2 # max three bounces allowed
+        # Those trajectories that get out of bounds should bounce back by the amount they got out
+        while(cnp.any(trajs[:,:numDofUniv]>=xuppers) or cnp.any(trajs[:,:numDofUniv]<xlowers)):
+            trajs[:,:2] = cnp.where( trajs[:,:2]>=xuppers, xuppers-(trajs[:,:2]-xuppers)-1e-10 ,trajs[:,:2] )
+            trajs[:,:2] = cnp.where( trajs[:,:2]<xlowers, xlowers+(xlowers-trajs[:,:2]) ,trajs[:,:2] )
+            patience-=1
+            if patience==0:
+                trajs[:,:2] = cnp.where( trajs[:,:2]>=xuppers, xuppers-1e-10,trajs[:,:2] )
+                trajs[:,:2] = cnp.where( trajs[:,:2]< xlowers, xlowers,trajs[:,:2] )
+                break
 
     # Generate Santiy check frames jic
     # Generate max 5 frames as a sanity check, equispaced ##################
@@ -599,7 +604,7 @@ if __name__ == "__main__":
                 ax.scatter(trajs[:,particle*numDofPartic],
                         trajs[:,particle*numDofPartic+1],
                        c='black', marker=marker_per_particle[particle],
-                       s=3, alpha=1)
+                       s=3, alpha=0.8)
             fig.suptitle(f"InterUniverse K={K:.3} A={A:.3}\nNumber of Universes={numTrajs}")
             image=f"{outputs_directory}/MIW/{ID_string}/figs/it_{it}.png"
             plt.savefig(image, dpi=dpi)

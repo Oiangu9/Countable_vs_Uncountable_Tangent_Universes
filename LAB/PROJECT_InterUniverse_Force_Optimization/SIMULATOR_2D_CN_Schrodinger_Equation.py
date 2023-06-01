@@ -303,7 +303,7 @@ if __name__ == "__main__":
         ax.set_xlabel("x")
         ax.set_ylabel("y")
         ax.set_title(f"Trajectories and Probability Density\n it={it} t={t:.4}")
-        ax.scatter(trajs[:,0], trajs[:,1], c="black", s=2,alpha=1)
+        ax.scatter(trajs[:,0], trajs[:,1], c="black", s=2,alpha=0.6)
 
         image=f"{outputs_directory}/SE_2D/{ID_string}/figs/it_{it}.png"
         plt.savefig(image, dpi=dpi)

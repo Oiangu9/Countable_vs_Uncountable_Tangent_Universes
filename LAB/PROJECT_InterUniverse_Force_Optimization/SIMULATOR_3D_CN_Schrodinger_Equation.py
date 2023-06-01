@@ -359,7 +359,7 @@ if __name__ == "__main__":
         ax.set_zlabel("z")
         ax.set_title(f"Trajectories and Projected Probability Density Contours\n it={it} t={t:.4}")
         ax.scatter(trajs[:,0], trajs[:,1], trajs[:,2], c="white", s=3,
-                    alpha=1)
+                    alpha=0.7)
         ax.view_init(elev=-30, azim=30)
 
         image=f"{outputs_directory}/SE_3D/{ID_string}/figs/it_{it}.png"

@@ -27,8 +27,12 @@ if __name__ == "__main__":
         Krange = [float(x) for x in f.readline().split("Krange ")[1].split('[')[1].split(']')[0].split(',')]
         Arange = [float(x) for x in f.readline().split("Arange ")[1].split('[')[1].split(']')[0].split(',')]
         dim = int(f.readline().split("dim ")[1])
-    Ks_to_try = np.linspace(Krange[0], Krange[1], numK)
-    As_to_try = np.linspace(Arange[0], Arange[1], numA)
+    if len(Krange)>2:
+        Ks_to_try = Krange
+        As_to_try = Arange
+    else:
+        Ks_to_try = np.linspace(Krange[0], Krange[1], numK)
+        As_to_try = np.linspace(Arange[0], Arange[1], numA)
     # Crear el arbol de directorios putser es interesante primero, luego
     # ein fitxero bat de estado nun apunte eingo deuen zeintzuk ya egin diezen
     # existitzen bazan leidu bakarrik
@@ -70,7 +74,7 @@ if __name__ == "__main__":
 
     wait= 10 # number of seconds to wait till re-check if ready
     t=0
-    while len(done)!=numK*numA+1:
+    while len(done)!=len(Ks_to_try)*len(As_to_try)+1:
         for result_ticket, ID in zip(result_tickets, to_do):
             if ID not in done and result_ticket.ready():
                 print(f"t={t}s Done ID {ID}!")
