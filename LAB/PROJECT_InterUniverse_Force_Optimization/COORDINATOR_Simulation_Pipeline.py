@@ -48,11 +48,12 @@ if __name__ == "__main__":
     # generate the IDs of the processes to do
     to_do = []
     arguments_for_workers = []
+    reference_traj_npy_file = f"./OUTPUTS/{exp_name}/SE_{dim}D/Reference_SE_Simulation/trajs/trajs_it_0.npy"
+
     if not f"Reference_SE_Simulation" in done:
         to_do.append(f"Reference_SE_Simulation")
         arguments_for_workers.append(("Reference_SE_Simulation", f"SIMULATOR_{dim}D_CN_Schrodinger_Equation.py",
             f"Reference_SE_Simulation {path_to_settings} {path_to_psi_and_potential} {f'./OUTPUTS/{exp_name}/'}"))
-        reference_traj_npy_file = f"./OUTPUTS/{exp_name}/SE_{dim}D/Reference_SE_Simulation/trajs/trajs_it_0.npy"
     for K in Ks_to_try:
         for A in As_to_try:
             ID = f"K_{K:.4}_A_{A:.4}"
@@ -72,7 +73,7 @@ if __name__ == "__main__":
         #print(arguments_for_worker)
         result_tickets.append( pool.apply_async( run_simulator_and_return_ID, arguments_for_worker ) )
 
-    wait= 10 # number of seconds to wait till re-check if ready
+    wait= 20 # number of seconds to wait till re-check if ready
     t=0
     while len(done)!=len(Ks_to_try)*len(As_to_try)+1:
         for result_ticket, ID in zip(result_tickets, to_do):

@@ -258,45 +258,50 @@ if __name__ == "__main__":
 
     # Extra-Universe forces
     try:
-        sys.path.append(path_to_psi_and_potential.split('/SETTINGS')[0])
-        module=importlib.import_module(path_to_psi_and_potential.split('SETTINGS/')[-1])
-        chosen_potential = getattr(module, 'chosenV')
+        sys.path.append(''.join(path_to_psi_and_potential.split('/SETTINGS_')[:-1]))
+        module=importlib.import_module('SETTINGS_'+path_to_psi_and_potential.split('/SETTINGS_')[-1])
+        psi0 = getattr(module, 'psi0')
+        chosenV = getattr(module, 'chosenV')
+
     except:
         raise AssertionError ("psi0 and chosenV functions not correctly defined in the given file!")
 
     if use_scenario_potential:
         if numDofUniv==3:
-            potential_field = chosen_potential(grid_potential) #[Nx,Ny,Nz]
+            potential_field = chosenV(grid_potential) #[Nx,Ny,Nz]
             external_force_field = -get_gradient_vector_field_3D(
                                 potential_field, real_dtype,dxs[0,0],dxs[0,1],dxs[0,2]) #[Nx,Ny,Nz, 3]
             external_force = lambda trajs: interpolate_traj_force_from_force_field_3D(
                             trajs, force_field=external_force_field, xs=nodes_potential[0], ys=nodes_potential[1], zs=nodes_potential[2])
-            # PLOT
-            fig = plt.figure(figsize=(10,5))
-            ax = fig.add_subplot(121, projection='3d')
-            maxim = potential_field.max()
-            minim = potential_field.min()
-            zati=3
-            level_surface = grid[:, potential_field>maxim/zati]
-            colormap = ax.scatter(*level_surface, c=potential_field[potential_field>maxim/zati],
-                    cmap='hot_r', s=2, alpha=potential_field[potential_field>maxim/zati]/maxim ) #, antialiased=True)
-            ax.set_xlim((xlowers[0,0], xuppers[0,1]))
-            ax.set_ylim((xlowers[0,1], xuppers[0,1]))
-            ax.set_zlim((xlowers[0,2], xuppers[0,2]))
+            try:
+                # PLOT
+                fig = plt.figure(figsize=(10,5))
+                ax = fig.add_subplot(121, projection='3d')
+                maxim = potential_field.max()
+                minim = potential_field.min()
+                zati=3
+                level_surface = grid[:, potential_field>maxim/zati]
+                colormap = ax.scatter(*level_surface, c=potential_field[potential_field>maxim/zati],
+                        cmap='hot_r', s=2, alpha=potential_field[potential_field>maxim/zati]/maxim ) #, antialiased=True)
+                ax.set_xlim((xlowers[0,0], xuppers[0,1]))
+                ax.set_ylim((xlowers[0,1], xuppers[0,1]))
+                ax.set_zlim((xlowers[0,2], xuppers[0,2]))
 
-            fig.colorbar(colormap, fraction=0.04, location='left')
-            ax.set_xlabel("x")
-            ax.set_ylabel("y")
-            ax.set_zlabel("z")
-            ax.set_title(f"Potential energy>{maxim/3:.3}")
-            ax.view_init(elev=70, azim=30)
+                fig.colorbar(colormap, fraction=0.04, location='left')
+                ax.set_xlabel("x")
+                ax.set_ylabel("y")
+                ax.set_zlabel("z")
+                ax.set_title(f"Potential energy>{maxim/3:.3}")
+                ax.view_init(elev=70, azim=30)
 
 
-            imagep=f"{outputs_directory}/MIW/{ID_string}/figs/energy_potential.png"
-            plt.savefig(imagep, dpi=160)
+                imagep=f"{outputs_directory}/MIW/{ID_string}/figs/energy_potential.png"
+                plt.savefig(imagep, dpi=160)
+            except:
+                pass
 
         elif numDofUniv==2:
-            potential_field = chosen_potential(grid_potential) #[Nx,Ny]
+            potential_field = chosenV(grid_potential) #[Nx,Ny]
             external_force_field = -get_gradient_vector_field_2D(
                                 potential_field, real_dtype,dxs[0,0],dxs[0,1]) #[ Nx,Ny, 2]
             external_force = lambda trajs: interpolate_traj_force_from_force_field_2D(
@@ -358,7 +363,7 @@ if __name__ == "__main__":
 
 
         else:
-            potential_field = chosen_potential(grid_potential) #[Nx]
+            potential_field = chosenV(grid_potential) #[Nx]
             external_force_field = get_gradient_vector_field_1D(
                                 potential_field, real_dtype,dxs[0]) #[ Nx]
             external_force = lambda trajs: interpolate_traj_force_from_force_field_1D(
@@ -489,12 +494,12 @@ if __name__ == "__main__":
         patience = 2 # max three bounces allowed
         # Those trajectories that get out of bounds should bounce back by the amount they got out
         while(cnp.any(trajs[:,:numDofUniv]>=xuppers) or cnp.any(trajs[:,:numDofUniv]<xlowers)):
-            trajs[:,:2] = cnp.where( trajs[:,:2]>=xuppers, xuppers-(trajs[:,:2]-xuppers)-1e-10 ,trajs[:,:2] )
-            trajs[:,:2] = cnp.where( trajs[:,:2]<xlowers, xlowers+(xlowers-trajs[:,:2]) ,trajs[:,:2] )
+            trajs[:,:numDofUniv] = cnp.where( trajs[:,:numDofUniv]>=xuppers, xuppers-(trajs[:,:numDofUniv]-xuppers)-1e-10 ,trajs[:,:numDofUniv] )
+            trajs[:,:numDofUniv] = cnp.where( trajs[:,:numDofUniv]<xlowers, xlowers+(xlowers-trajs[:,:numDofUniv]) ,trajs[:,:numDofUniv] )
             patience-=1
             if patience==0:
-                trajs[:,:2] = cnp.where( trajs[:,:2]>=xuppers, xuppers-1e-10,trajs[:,:2] )
-                trajs[:,:2] = cnp.where( trajs[:,:2]< xlowers, xlowers,trajs[:,:2] )
+                trajs[:,:numDofUniv] = cnp.where( trajs[:,:numDofUniv]>=xuppers, xuppers-1e-10,trajs[:,:numDofUniv] )
+                trajs[:,:numDofUniv] = cnp.where( trajs[:,:numDofUniv]< xlowers, xlowers,trajs[:,:numDofUniv] )
                 break
 
     # Generate Santiy check frames jic

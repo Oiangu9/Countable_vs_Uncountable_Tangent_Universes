@@ -1,9 +1,9 @@
-numIts_SE 1400
+numIts_SE 1401
 dt_SE 0.005
 outputEvery_SE 100
 Ns_SE_and_Newt_pdf [400, 400]
-xlowers [-20, -15]
-xuppers [25, 15]
+xlowers [-12, -12]
+xuppers [12, 12]
 numDofUniv 2
 numDofPartic 2
 numTrajs 3000

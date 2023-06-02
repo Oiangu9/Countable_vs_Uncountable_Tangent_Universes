@@ -1,9 +1,9 @@
-numIts_SE 601
+numIts_SE 501
 dt_SE 0.005
-outputEvery_SE 20
-Ns_SE_and_Newt_pdf [500, 500]
-xlowers [-20, -15]
-xuppers [25, 15]
+outputEvery_SE 50
+Ns_SE_and_Newt_pdf [400, 400]
+xlowers [-7.0, -7.0]
+xuppers [7.0, 7.0]
 numDofUniv 2
 numDofPartic 2
 numTrajs 3000
@@ -14,7 +14,7 @@ real_dtype cnp.single
 K_coulomb 1
 qs [1,1]
 dt_Newt 0.001
-Ns_Newt_pot [400,400]
+Ns_Newt_pot [350,350]
 use_Coulomb_potential_Newt 0
 use_scenario_potential_Newt 1
 sigma_pdf_estimation 1

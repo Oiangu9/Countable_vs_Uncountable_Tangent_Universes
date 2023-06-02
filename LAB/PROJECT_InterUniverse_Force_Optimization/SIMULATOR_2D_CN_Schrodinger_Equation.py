@@ -91,10 +91,11 @@ if __name__ == "__main__":
 
     # SIMULATION SCENRAIO AND INITIAL STATE #################################
     try:
-        sys.path.append(path_to_psi_and_potential.split('/SETTINGS')[0])
-        module=importlib.import_module(path_to_psi_and_potential.split('SETTINGS/')[-1])
+        sys.path.append(''.join(path_to_psi_and_potential.split('/SETTINGS_')[:-1]))
+        module=importlib.import_module('SETTINGS_'+path_to_psi_and_potential.split('/SETTINGS_')[-1])
         psi0 = getattr(module, 'psi0')
         chosenV = getattr(module, 'chosenV')
+
     except:
         raise AssertionError ("psi0 and chosenV functions not correctly defined in the given file!")
     # PREPARE ARRAYS FOR SIMULATION #########################################
@@ -242,9 +243,16 @@ if __name__ == "__main__":
         trajs[:,:2] = trajs[:,:2] + dt*trajs[:,2:]/cms #[numTrajs, 4]
 
         # Those trajectories that get out of bounds should bounce back by the amount they got out
+        patience = 2 # max three bounces allowed
+        # Those trajectories that get out of bounds should bounce back by the amount they got out
         while(cnp.any(trajs[:,:numDofUniv]>=cxuppers) or cnp.any(trajs[:,:numDofUniv]<cxlowers)):
-            trajs[:,:2] = cnp.where( trajs[:,:2]>=cxuppers, cxuppers-(trajs[:,:2]-cxuppers)-1e-10 ,trajs[:,:2] )
-            trajs[:,:2] = cnp.where( trajs[:,:2]<cxlowers, cxlowers+(cxlowers-trajs[:,:2]) ,trajs[:,:2] )
+            trajs[:,:numDofUniv] = cnp.where( trajs[:,:numDofUniv]>=cxuppers, cxuppers-(trajs[:,:numDofUniv]-cxuppers)-1e-10 ,trajs[:,:numDofUniv] )
+            trajs[:,:numDofUniv] = cnp.where( trajs[:,:numDofUniv]<cxlowers, cxlowers+(cxlowers-trajs[:,:numDofUniv]) ,trajs[:,:numDofUniv] )
+            patience-=1
+            if patience==0:
+                trajs[:,:numDofUniv] = cnp.where( trajs[:,:numDofUniv]>=cxuppers, cxuppers-1e-10,trajs[:,:numDofUniv] )
+                trajs[:,:numDofUniv] = cnp.where( trajs[:,:numDofUniv]< cxlowers, cxlowers,trajs[:,:numDofUniv] )
+                break
 
         # NEXT PSI ####################################################
         # compute the next time iteration's wavefunction

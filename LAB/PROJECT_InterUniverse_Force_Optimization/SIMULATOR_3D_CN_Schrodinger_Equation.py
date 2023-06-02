@@ -91,8 +91,8 @@ if __name__ == "__main__":
 
     # SIMULATION SCENRAIO AND INITIAL STATE #################################
     try:
-        sys.path.append(path_to_psi_and_potential.split('/SETTINGS')[0])
-        module=importlib.import_module(path_to_psi_and_potential.split('SETTINGS/')[-1])
+        sys.path.append(''.join(path_to_psi_and_potential.split('/SETTINGS_')[:-1]))
+        module=importlib.import_module('SETTINGS_'+path_to_psi_and_potential.split('/SETTINGS_')[-1])
         psi0 = getattr(module, 'psi0')
         chosenV = getattr(module, 'chosenV')
 
@@ -140,38 +140,41 @@ if __name__ == "__main__":
     cxuppers = cnp.array(xuppers)[cnp.newaxis, :]
     cms = cnp.array(ms)[cnp.newaxis, :]
 
-    # SANITY ##############################
-    # Chosen Potential and Trajectories Plot for initial time
-    if use_cuda_numpy:
-        V_ijk=cnp.asnumpy(V_ijk)
-        trajs_numpy = cnp.asnumpy(trajs)
-        grid = cnp.asnumpy(grid)
-    else:
-        trajs_numpy = trajs
-    fig = plt.figure(figsize=(5,5))
-    ax = fig.add_subplot(111, projection='3d')
-    maxim = V_ijk.max()
-    minim = V_ijk.min()
-    zati=3
-    level_surface = grid[ V_ijk>maxim/zati, :]
-    colormap = ax.scatter3D(level_surface[:,0], level_surface[:,1], level_surface[:,2],
-                        c=V_ijk[V_ijk>maxim/zati],
-            cmap='hot_r', s=2, alpha=V_ijk[V_ijk>maxim/zati]/maxim ) #, antialiased=True)
-    ax.set_xlim((xlowers[0], xuppers[1]))
-    ax.set_ylim((xlowers[1], xuppers[1]))
-    ax.set_zlim((xlowers[2], xuppers[2]))
+    try:
+        # SANITY ##############################
+        # Chosen Potential and Trajectories Plot for initial time
+        if use_cuda_numpy:
+            V_ijk=cnp.asnumpy(V_ijk)
+            trajs_numpy = cnp.asnumpy(trajs)
+            grid = cnp.asnumpy(grid)
+        else:
+            trajs_numpy = trajs
+        fig = plt.figure(figsize=(5,5))
+        ax = fig.add_subplot(111, projection='3d')
+        maxim = V_ijk.max()
+        minim = V_ijk.min()
+        zati=3
+        level_surface = grid[ V_ijk>maxim/zati, :]
+        colormap = ax.scatter3D(level_surface[:,0], level_surface[:,1], level_surface[:,2],
+                            c=V_ijk[V_ijk>maxim/zati],
+                cmap='hot_r', s=2, alpha=V_ijk[V_ijk>maxim/zati]/maxim ) #, antialiased=True)
+        ax.set_xlim((xlowers[0], xuppers[1]))
+        ax.set_ylim((xlowers[1], xuppers[1]))
+        ax.set_zlim((xlowers[2], xuppers[2]))
 
-    fig.colorbar(colormap, fraction=0.04, location='left')
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
-    ax.set_title(f"Potential energy>{maxim/3:.3}")
-    ax.view_init(elev=30, azim=30)
-    ax.scatter(trajs_numpy[:,0], trajs_numpy[:,1], trajs_numpy[:,2], c="black", s=3,
-                alpha=1)
-    os.makedirs(f"{outputs_directory}/SE_3D/{ID_string}/figs/", exist_ok=True)
-    image=f"{outputs_directory}/SE_3D/{ID_string}/figs/energy_potential.png"
-    plt.savefig(image, dpi=150)
+        fig.colorbar(colormap, fraction=0.04, location='left')
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("z")
+        ax.set_title(f"Potential energy>{maxim/3:.3}")
+        ax.view_init(elev=30, azim=30)
+        ax.scatter(trajs_numpy[:,0], trajs_numpy[:,1], trajs_numpy[:,2], c="black", s=3,
+                    alpha=1)
+        os.makedirs(f"{outputs_directory}/SE_3D/{ID_string}/figs/", exist_ok=True)
+        image=f"{outputs_directory}/SE_3D/{ID_string}/figs/energy_potential.png"
+        plt.savefig(image, dpi=150)
+    except:
+        pass
 
     # Propagator #################################################
     U_L = cuda_get_discrete_U_L(*Ns, *dxs, dt, *ms, hbar)
@@ -276,9 +279,16 @@ if __name__ == "__main__":
         trajs[:, :3] = trajs[:,:3] + dt*trajs[:,3:]/cms #[numTrajs, 3]
 
         # Those trajectories that get out of bounds should bounce back by the amount they got out
+        patience = 2 # max three bounces allowed
+        # Those trajectories that get out of bounds should bounce back by the amount they got out
         while(cnp.any(trajs[:,:numDofUniv]>=cxuppers) or cnp.any(trajs[:,:numDofUniv]<cxlowers)):
-            trajs[:,:3] = cnp.where( trajs[:,:3]>=cxuppers, cxuppers-(trajs[:,:3]-cxuppers)-1e-10 ,trajs[:,:3] ) # if trajs==xupper or lower need a bit of a push extra
-            trajs[:,:3] = cnp.where( trajs[:,:3]<cxlowers, cxlowers+(cxlowers-trajs[:,:3]) ,trajs[:,:3] )
+            trajs[:,:numDofUniv] = cnp.where( trajs[:,:numDofUniv]>=cxuppers, cxuppers-(trajs[:,:numDofUniv]-cxuppers)-1e-10 ,trajs[:,:numDofUniv] )
+            trajs[:,:numDofUniv] = cnp.where( trajs[:,:numDofUniv]<cxlowers, cxlowers+(cxlowers-trajs[:,:numDofUniv]) ,trajs[:,:numDofUniv] )
+            patience-=1
+            if patience==0:
+                trajs[:,:numDofUniv] = cnp.where( trajs[:,:numDofUniv]>=cxuppers, cxuppers-1e-10,trajs[:,:numDofUniv] )
+                trajs[:,:numDofUniv] = cnp.where( trajs[:,:numDofUniv]< cxlowers, cxlowers,trajs[:,:numDofUniv] )
+                break
 
         # NEXT PSI ####################################################
         # compute the next time iteration's wavefunction
