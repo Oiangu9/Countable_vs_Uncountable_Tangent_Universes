@@ -26,6 +26,7 @@ if __name__ == "__main__":
         return arguments[0] #ID
     #run_coordinator_and_return(arguments_for_coordinators[1])
     # We initiate a pool of num_workers processes-> Pythoin does not allow pools to generate children pools!!! So we have to do this with processes
+    #run_coordinator_and_return(arguments_for_coordinators[0])
     wait= 180 # number of seconds to wait till re-check if ready
     t=0
     processes = []

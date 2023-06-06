@@ -15,7 +15,7 @@ sigmas = cnp.array([1/np.sqrt(2),1/np.sqrt(2)])
 ps = cnp.array([0,0])
 
 # Initial Wavefunction
-def psi0(grid, mus, sigmas, ps, hbar):
+def psi0(grid, mus=mus, sigmas=sigmas, ps=ps, hbar=1):
     # grid is [Nx,Ny, 2]
     phis = cnp.arctan2(grid[:,:,1], grid[:,:,0])
     rho = cnp.linalg.norm(grid-mus, axis=-1).astype(dtype=cnp.single )
