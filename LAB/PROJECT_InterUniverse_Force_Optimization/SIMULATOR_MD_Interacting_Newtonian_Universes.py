@@ -91,7 +91,8 @@ def get_gradient_vector_field_1D(potential_field, real_dtype, dx):
     gradient[-2,0] = (potential_field[-1]-potential_field[-3])/(2*dx)
     # rest with O(dx**4) centered difference
     gradient[2:-2,0] = (-potential_field[4:]+8*potential_field[3:-1]-8*potential_field[1:-3]+potential_field[:-4])/(12*dx)
-    return gradient
+    return gradient #[Nx,1]
+
 
 
 def interpolate_traj_force_from_force_field_3D(trajs, force_field, xs, ys, zs):
@@ -126,6 +127,17 @@ def interpolate_traj_force_from_force_field_2D(trajs, force_field, xs, ys):
         (1-ratx_down)*raty_down* force_field[ trajs_idxs[0], trajs_idxs[1]+1] +\
         ratx_down*(1-raty_down)* force_field[ trajs_idxs[0]+1, trajs_idxs[1] ] +\
         (1-ratx_down)*(1-raty_down)* force_field[ trajs_idxs[0], trajs_idxs[1]] #[numTrajs,2]
+
+def interpolate_traj_force_from_force_field_1D(trajs, force_field, xs):
+    # if no trajectory surpasses below the node 0 or J-1 at any time,
+    # traj will always be among (0,J-1) and traj//dxs will be among [0,J-1]
+    trajs_idxs = (((trajs-xlowers)//dxs).T).astype(cnp.uint) # [1, numTrajs] the closest index from below along each axis
+    # relative distance to the closest index from below point along each dimension
+    # the closer, the bigger its weight should be for the trajectory propagation
+    ratx_down = ((trajs[:,0]-xs[ trajs_idxs[0] ])/(xs[ trajs_idxs[0]+1 ]-xs[ trajs_idxs[0] ]))[:,cnp.newaxis]
+    # Interpolate momentum
+    return ratx_down* force_field[ trajs_idxs[0]+1 ] +\
+        (1-ratx_down)* force_field[ trajs_idxs[0] ]  #[numTrajs,1]
 
 
 def estimate_pdf_from_trajs(trajs, grid, sigma, real_dtype, norm):
@@ -238,9 +250,13 @@ if __name__ == "__main__":
     #Create coordinates at which the solution will be calculated
     nodes_pdf = [cnp.linspace(xlowers[j], xuppers[j], Ns_pdf[j]) for j in range(numDofUniv)] # (xs, ys, zs)
     nodes_potential = [cnp.linspace(xlowers[j], xuppers[j], Ns_potential[j]) for j in range(numDofUniv)] # (xs, ys, zs)
-    # Create a node mesh sirve para 3D y 2D
-    grid_pdf=cnp.moveaxis(cnp.array(cnp.meshgrid(*nodes_pdf)).swapaxes(1,2), 0,-1) #[Nx,Ny,Nz,3]
-    grid_potential=cnp.moveaxis(cnp.array(cnp.meshgrid(*nodes_potential)).swapaxes(1,2), 0,-1) #[Nx,Ny,Nz,3]
+    # Create a node mesh
+    if numDofUniv==2 or numDofUniv==3:
+        grid_pdf=cnp.moveaxis(cnp.array(cnp.meshgrid(*nodes_pdf)).swapaxes(1,2), 0,-1) #[Nx,Ny,Nz,3]
+        grid_potential=cnp.moveaxis(cnp.array(cnp.meshgrid(*nodes_potential)).swapaxes(1,2), 0,-1) #[Nx,Ny,Nz,3]
+    else:
+        grid_pdf = nodes_pdf[0][:, np.newaxis] #[Nx, 1]
+        grid_potential= nodes_potential[0][:, np.newaxis] #[Nx, 1]
 
     xlowers = cnp.array(xlowers)[cnp.newaxis, :]
     xuppers = cnp.array(xuppers)[cnp.newaxis, :]
@@ -364,10 +380,27 @@ if __name__ == "__main__":
 
         else:
             potential_field = chosenV(grid_potential) #[Nx]
-            external_force_field = get_gradient_vector_field_1D(
-                                potential_field, real_dtype,dxs[0]) #[ Nx]
+            external_force_field = -get_gradient_vector_field_1D(
+                                potential_field, real_dtype,dxs[0]) #[ Nx, 1]
             external_force = lambda trajs: interpolate_traj_force_from_force_field_1D(
-                                trajs, force_field=external_force_field, xs=xs)
+                                trajs, force_field=external_force_field, xs=nodes_potential[0])
+            fig = plt.figure(figsize=(14,5))
+            ax = fig.add_subplot(121)
+            ax.plot(grid_potential[:,0], potential_field, label="Potential Energy", color=u'#ff7f0e')
+            ax.plot(trajs[:,0], [np.mean(potential_field)]*numTrajs,'o',
+                    c="black", markersize=1, label="Initial Trajectories")
+            ax.set_xlabel("x")
+            ax.set_ylabel("Potential Energy")
+            ax.set_title(f"Potential Energy Field\nand Initial Trajectories")
+            ax = fig.add_subplot(122)
+            ax.plot(grid_potential[:,0], external_force_field[:,0], label="Force")
+            ax.plot(trajs[:,0], [np.mean(external_force_field)]*numTrajs, 'o', markersize=1,
+                    label="Trajectories", color='black')
+            ax.set_title("Force field")
+            os.makedirs(f"{outputs_directory}/MIW/{ID_string}/figs/", exist_ok=True)
+            imagep=f"{outputs_directory}/MIW/{ID_string}/figs/energy_potential.png"
+            plt.savefig(imagep, dpi=120, bbox_inches='tight')
+
 
         scenario_forces = [
                 external_force
@@ -455,13 +488,10 @@ if __name__ == "__main__":
         # Step 1, compute the total force on each dof
         for force in inter_universe_forces:
             forces = force(trajs[:,:numDofUniv])
-            ###print("InterUniverse ",np.abs(force(trajs[:,:numDofUniv])).mean())
         for force in scenario_forces:
             forces += force(trajs[:,:numDofUniv])
-            ##print("Scenario ",np.abs(force(trajs[:,:numDofUniv])).mean())
         for force in inter_particle_forces_within_universe:
             forces += force(trajs[:,:numDofUniv])
-            ##print("InterParticle ",np.abs(force(trajs[:,:numDofUniv])).mean())
 
         # OUTPUT of current state
         if it%outputEvery==0:
@@ -615,6 +645,37 @@ if __name__ == "__main__":
             plt.savefig(image, dpi=dpi)
             image_paths.append(image)
 
+
+    if numDofPartic==1 and numDofUniv<3:
+        os.makedirs(f"{outputs_directory}/MIW/{ID_string}/figs/", exist_ok=True)
+        image_paths = []
+        dpi = 100
+        fig = plt.figure( figsize=(14,7))
+
+        for it, t in enumerate(ts):
+            if it%outputEvery==0:
+                print(f"\n > It {it}/{numIts}")
+
+                fig.clf()
+                pdf = np.load(f"{outputs_directory}/MIW/{ID_string}/pdf/pdf_it_{it}_numIts_{numIts}_dt_{dt:.3}.npy")
+                trajs = np.load(f"{outputs_directory}/MIW/{ID_string}/trajs/trajs_it_{it}_numIts_{numIts}_dt_{dt:.3}.npy")
+
+                # PDF + POTENTIAL + TRAJECTORIES ##############################################
+                ax = fig.add_subplot(111)
+                ax.plot(grid_pdf[:,0], pdf, label="Probablity Density")
+                ax.set_xlabel("x")
+                ax.set_ylabel("pdf")
+                ax.set_title(f"Trajectories and Probability Density\n it={it} t={t:.4}")
+                plt.legend()
+                ax2=ax.twinx()
+                ax2.plot(grid_potential[:,0], potential_field, label="Potential", color=u'#ff7f0e')
+                ax2.plot(trajs[:,0], [np.mean(potential_field)]*numTrajs, 'o',color='black',
+                        markersize=1,label="Bohmian Trajectories")
+                ax2.set_ylabel("Potential")
+                image=f"{outputs_directory}/MIW/{ID_string}/figs/it_{it}.png"
+                plt.legend()
+                plt.savefig(image, dpi=dpi)
+                image_paths.append(image)
     # Generate gif
     import imageio
     fps=7

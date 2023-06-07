@@ -239,9 +239,9 @@ if __name__ == "__main__":
         trajs_idxs = (((trajs[:,:3]-cxlowers)//cdxs).T).astype(cnp.uint) # [3, numTrajs] the closest index from below along each axis
         # relative distance to the closest index from below point along each dimension
         # the closer, the bigger its weight should be for the trajectory propagation
-        ratx_down = ((trajs[:,0]-xs[ trajs_idxs[0] ])/(xs[ trajs_idxs[0]+1 ]-xs[ trajs_idxs[0] ]))[:,np.newaxis]
-        raty_down = ((trajs[:,1]-ys[ trajs_idxs[1] ])/(ys[ trajs_idxs[1]+1 ]-ys[ trajs_idxs[1] ]))[:,np.newaxis]
-        ratz_down = ((trajs[:,2]-zs[ trajs_idxs[2] ])/(zs[ trajs_idxs[2]+1 ]-zs[ trajs_idxs[2] ]))[:,np.newaxis]
+        ratx_down = ((trajs[:,0]-xs[ trajs_idxs[0] ])/(xs[ trajs_idxs[0]+1 ]-xs[ trajs_idxs[0] ]))[:,cnp.newaxis]
+        raty_down = ((trajs[:,1]-ys[ trajs_idxs[1] ])/(ys[ trajs_idxs[1]+1 ]-ys[ trajs_idxs[1] ]))[:,cnp.newaxis]
+        ratz_down = ((trajs[:,2]-zs[ trajs_idxs[2] ])/(zs[ trajs_idxs[2]+1 ]-zs[ trajs_idxs[2] ]))[:,cnp.newaxis]
         # Get the interpolated momenta
         trajs[:, 3:] = ratx_down*raty_down*ratz_down* p[ trajs_idxs[0]+1, trajs_idxs[1]+1, trajs_idxs[2]+1 ] +\
             (1-ratx_down)*raty_down*ratz_down* p[ trajs_idxs[0], trajs_idxs[1]+1, trajs_idxs[2]+1 ] +\
