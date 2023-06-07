@@ -1,0 +1,21 @@
+numIts_SE 801
+dt_SE 0.005
+outputEvery_SE 80
+Ns_SE_and_Newt_pdf [500, 500]
+xlowers [-17, -10]
+xuppers [17, 10]
+numDofUniv 2
+numDofPartic 2
+numTrajs 3000
+hbar 1
+ms [1,1]
+complex_dtype cnp.csingle
+real_dtype cnp.single
+K_coulomb 1
+qs [1,1]
+dt_Newt 0.001
+Ns_Newt_pot [400,400]
+use_Coulomb_potential_Newt 0
+use_scenario_potential_Newt 1
+sigma_pdf_estimation 1
+
