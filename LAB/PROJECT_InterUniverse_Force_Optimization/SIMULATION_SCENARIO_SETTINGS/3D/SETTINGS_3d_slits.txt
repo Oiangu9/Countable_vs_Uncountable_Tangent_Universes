@@ -8,7 +8,7 @@ numDofUniv 2
 numDofPartic 2
 numTrajs 3000
 hbar 1
-ms [1,1]
+ms [1,1,1]
 complex_dtype cnp.csingle
 real_dtype cnp.single
 K_coulomb 1
