@@ -4,8 +4,8 @@ outputEvery_SE 35
 Ns_SE_and_Newt_pdf [120, 120, 120]
 xlowers [-8.0, -8.0, -10.0]
 xuppers [8.0, 8.0, 10.0]
-numDofUniv 2
-numDofPartic 2
+numDofUniv 3
+numDofPartic 3
 numTrajs 3000
 hbar 1
 ms [1,1,1]

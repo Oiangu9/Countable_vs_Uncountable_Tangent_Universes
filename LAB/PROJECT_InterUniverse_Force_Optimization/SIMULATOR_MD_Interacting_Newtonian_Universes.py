@@ -654,11 +654,11 @@ if __name__ == "__main__":
 
         for it, t in enumerate(ts):
             if it%outputEvery==0:
-                print(f"\n > It {it}/{numIts}")
+                ##print(f"\n > It {it}/{numIts}")
 
                 fig.clf()
-                pdf = np.load(f"{outputs_directory}/MIW/{ID_string}/pdf/pdf_it_{it}_numIts_{numIts}_dt_{dt:.3}.npy")
-                trajs = np.load(f"{outputs_directory}/MIW/{ID_string}/trajs/trajs_it_{it}_numIts_{numIts}_dt_{dt:.3}.npy")
+                pdf = np.load(f"{outputs_directory}/MIW/{ID_string}/pdf/pdf_it_{it}.npy")
+                trajs = np.load(f"{outputs_directory}/MIW/{ID_string}/trajs/trajs_it_{it}.npy")
 
                 # PDF + POTENTIAL + TRAJECTORIES ##############################################
                 ax = fig.add_subplot(111)

@@ -6,7 +6,7 @@ xlowers [-17]
 xuppers [17]
 numDofUniv 1
 numDofPartic 1
-numTrajs 3000
+numTrajs 2000
 hbar 1
 ms [1]
 complex_dtype cnp.csingle
