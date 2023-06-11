@@ -7,7 +7,7 @@ if use_cuda_numpy:
 else:
     import numpy as cnp
 
-def chosenV(grid, dtype=real_dtype):
+def chosenV(grid, real_dtype=cnp.single):
     return cnp.zeros(grid.shape[:-1], dtype=real_dtype)
 
 # parameters for gaussian
@@ -18,5 +18,3 @@ ps = cnp.array([0,0])
 def psi0(grid, mus=mus, sigmas=sigmas, ps=ps, hbar=1):
     # grid is [Nx,Ny,.., n]
     return np.prod(1/(sigmas*np.sqrt(2*np.pi))**0.5*cnp.exp(-(grid-mus)**2/(4*sigmas**2))*cnp.exp(1j*(ps*grid)/hbar), axis=-1, dtype=cnp.csingle)
-
-
