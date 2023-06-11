@@ -14,7 +14,7 @@
 
 Consider a non-relativistic isolated system of $n\in\mathbb{N}$ degrees of freedom $\vec x=(x_1,...,x_n)\in\mathbb{R}^n$, e.g. the system of all the particles in the Universe. According to quantum mechanics, their state in each time $t$ is given by the complex wavefunction $\psi(\vec x,t)$, the dynamics of which in time are given by the Schrödinger Equation, 
 
-$$\tag{1}\label{1}
+$$\tag{1}
 i\hbar \frac{\partial \psi(\vec x,t)}{\partial t} = \sum_{k=1}^n \frac{-\hbar^2}{2m_k}\frac{\partial \psi(\vec x,t)}{\partial x_k}+U(\vec x)\psi(\vec x,t),
 $$
 
@@ -22,11 +22,11 @@ where $m_k$ is the constant mass of the $k$-th degree of freedom, $\hbar$ is the
 
 By defining the phase and magnitude squared (related to the probability density of finding the system at a configuration $\vec x$) for the wavefunction $\rho(\vec x,t),S(\vec x,t)$, such that in polar form $\psi(\vec x,t)=\rho^{1/2}(\vec x,t)exp(iS(\vec x,t)/\hbar)$, the Schrödinger Equaiton decouples into two real partial differential equations,
 
-$$\tag{2}\label{2}
+$$\tag{2}
 \frac{\partial \rho(\vec x,t)}{\partial t}=-\sum_{k=1}^n\frac{\partial}{\partial x_k}\Big[\rho(\vec{x},t)v_k(\vec x,t)\Big]
 $$
 
-$$\tag{3}\label{3}
+$$\tag{3}
 -\frac{\partial S(\vec x,t)}{\partial t}=\sum_{k=1}^n\frac{1}{2}m_k v_k(\vec x,t)^2+V(\vec x,t)+Q(\vec x,t)
 $$
 
@@ -48,7 +48,7 @@ This decomposition is very well known and forms the basis of the Bohmian quantum
 
 Let us considers the Lagrangian frame of the fluid, where the velocity field guides the ensemble of trajectories $\vec x(\vec \xi,t)$, 
 
-$$\tag{6}\label{6}
+$$\tag{6}
 \frac{\partial \vec{x}(\vec \xi, t)}{\partial t} = \vec v(\vec{x}, t)\Big\rvert_{\vec x=\vec x(\vec \xi, t)},
 $$
 
@@ -56,13 +56,13 @@ where each trajectory is tagged by $\xi$, representing its positions at some ref
 
 Then, the Hamilton-Jacobi equation simply reduces to Newton's Second law
 
-$$\tag{7}\label{7}
+$$\tag{7}
 \frac{\partial^2 x_k(\vec \xi,t)}{\partial t^2} = -\frac{\partial }{\partial x_k} \Big[ U(\vec x,t)+Q(\vec x,t) \Big]\Big\rvert_{\vec x=\vec x(\vec \xi, t)}.
 $$
 
-Note that the density $\rho(\vec x,t)$ and the velocity field $\vec v(\vec x,t)$ contain exactly the same information as the wavefunction $\psi(\vec x,t)$ up to an irrelevant global phase. Thus, the time evolution of the quantum system can equivalently be described instead of using the Schrödinger Equation $\eqref{1}$, by using the Newton's Second Law $\eqref{7}$ and the continuity equation $\eqref{2}$. While the curvature of the density of possible trajectories guides the same trajectories through the Newton's second law, the density is guided by the velocity field of these trajectories through the continuity equation. This manifestly shows the quantum many-body problem. Unlike in classical mechanics, it is not possible to numerically evolve a single trajectory alone, since the information over the rest of trajectories is necessary. Thus, increasing one degree of freedom in the system implies the time evolution of an exponentially more trajectories [[4](#4), [5](#5)]. That's the price of a fluid in configuration space.
+Note that the density $\rho(\vec x,t)$ and the velocity field $\vec v(\vec x,t)$ contain exactly the same information as the wavefunction $\psi(\vec x,t)$ up to an irrelevant global phase. Thus, the time evolution of the quantum system can equivalently be described instead of using the Schrödinger Equation $\eqref{1}$, by using the Newton's Second Law $\eqref{7}$ and the continuity equation $\eqref{2}$. While the curvature of the density of possible trajectories guides the same trajectories through the Newton's second law, the density is guided by the velocity field of these trajectories through the continuity equation. This manifestly shows the quantum many-body problem. Unlike in classical mechanics, it is not possible to numerically evolve a single trajectory alone, since the information over the rest of trajectories is necessary. Thus, increasing one degree of freedom in the system implies the time evolution of an exponentially more trajectories [[4](#4)]. That's the price of a fluid in configuration space.
 
-If one reads literally this decomposition, the time evolution of a quantum Universe can be understood as an uncountable set of classical Universes (a fluid of classical Universes), that repel each other when they get "too close" to each other in configuration space (their density gets "agglomerated"). The natural question following this is: what if in reality there are not an uncountable number of tangent [\*](#f) Universes, but a (perhaps infinte, but) countable number of them? Such that in the limit the interaction between them leads us to the quantum potential for the fluid. This was first publicly argued by Hall et al. in 2014 [[6](#6)].
+If one reads literally this decomposition, the time evolution of a quantum Universe can be understood as an uncountable set of classical Universes (a fluid of classical Universes), that repel each other when they get "too close" to each other in configuration space (their density gets "agglomerated"). The natural question following this is: what if in reality there are not an uncountable number of tangent [\*](#f) Universes, but a (perhaps infinte, but) countable number of them? Such that in the limit the interaction between them leads us to the quantum potential for the fluid. This was first publicly argued by Hall et al. in 2014 [[5](#5)].
 
 Even if this was not true, the fact is that, there is a priori no argument against the fact that there exist interaction forces/potentials between $M$ configuration space $n$ dimensional "Universes", such that if we simulate enough of them $M\rightarrow \infty$, we can reconstruct the wavefunction through their density and velocities, with an arbitrary precision, at any time.
 
@@ -75,15 +75,17 @@ Even if this was not true, the fact is that, there is a priori no argument again
 
 ## Bibliography
 <a id="r1">[1]</a> 
-Hola
+Bohm, David. *"A suggested interpretation of the quantum theory in terms of" hidden" variables. I."* Physical review 85.2 (1952): 166.
 
 <a id="2">[2]</a> 
-Hey
+Oriols, Xavier, and Jordi Mompart, eds. *Applied Bohmian mechanics: From nanoscale systems to cosmology*. CRC Press, 2019.
 
 <a id="3">[3]</a> 
+Madelung, Erwin. *"Quantentheorie in hydrodynamischer Form." Zeitschrift fur Physik 40 (1927): 322.
 
 <a id="4">[4]</a> 
+Oianguren, Xabier. *"The Quantum Many Body Problem"*, Bachelor’s Thesis (2020) for the Nanoscience and Nanotechnology Degree (UAB).
 
 <a id="5">[5]</a> 
-
+Hall, Michael JW, Dirk-André Deckert, and Howard M. Wiseman. *"Quantum phenomena modeled by interactions between many classical worlds."* Physical Review X 4.4 (2014): 041013.
 
