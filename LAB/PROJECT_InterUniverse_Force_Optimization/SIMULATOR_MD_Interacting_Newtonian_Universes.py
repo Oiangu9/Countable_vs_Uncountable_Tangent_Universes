@@ -406,6 +406,9 @@ if __name__ == "__main__":
                 external_force
             ] # external forces
     else:
+        def chosenV(grid, real_dtype=cnp.single):
+            return cnp.zeros(grid.shape[:-1], dtype=real_dtype)
+        potential_field = chosenV(grid_pdf) #[Nx] for plotting purposes
         scenario_forces = []
     # Inter-particle Intra-Universe Forces
     def coulomb_force(trajs, qs, numDofPartic, K):

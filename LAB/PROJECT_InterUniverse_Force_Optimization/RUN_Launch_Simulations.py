@@ -39,7 +39,7 @@ if __name__ == "__main__":
                     process.join()
                     did.append(k)
                     print(f">>>> t={t}s Done one!")
-            for d in did:
+            for d in sorted(did)[::-1]:
                 processes.pop(d)
             t+=wait
             time.sleep(wait)
