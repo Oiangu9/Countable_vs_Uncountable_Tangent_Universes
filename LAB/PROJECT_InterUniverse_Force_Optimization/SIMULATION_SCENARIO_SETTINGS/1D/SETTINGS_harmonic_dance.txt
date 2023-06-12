@@ -2,11 +2,11 @@ numIts_SE 501
 dt_SE 0.006
 outputEvery_SE 50
 Ns_SE_and_Newt_pdf [1000]
-xlowers [-5]
-xuppers [5]
+xlowers [-6.5]
+xuppers [6.5]
 numDofUniv 1
 numDofPartic 1
-numTrajs 2000
+numTrajs 3000
 hbar 1
 ms [1]
 complex_dtype cnp.csingle

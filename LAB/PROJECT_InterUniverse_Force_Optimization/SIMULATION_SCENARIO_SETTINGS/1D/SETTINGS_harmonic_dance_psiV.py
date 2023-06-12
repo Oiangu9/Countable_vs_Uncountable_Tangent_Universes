@@ -11,7 +11,7 @@ def chosenV(grid):
     return 0.5*cnp.sum(grid**2, -1)
 
 # Initial Wavefunction
-mus = cnp.array([3])
+mus = cnp.array([2.5])
 sigmas = cnp.array([1/np.sqrt(2)])
 ps = cnp.array([-1.0])
 
