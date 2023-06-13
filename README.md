@@ -81,7 +81,7 @@ Bohm, David. *"A suggested interpretation of the quantum theory in terms of" hid
 Oriols, Xavier, and Jordi Mompart, eds. *Applied Bohmian mechanics: From nanoscale systems to cosmology*. CRC Press, 2019.
 
 <a id="3">[3]</a> 
-Madelung, Erwin. *"Quantentheorie in hydrodynamischer Form." Zeitschrift fur Physik 40 (1927): 322.
+Madelung, Erwin. *"Quantentheorie in hydrodynamischer Form."* Zeitschrift fur Physik 40 (1927): 322.
 
 <a id="4">[4]</a> 
 Oianguren, Xabier. *"The Quantum Many Body Problem"*, Bachelor’s Thesis (2020) for the Nanoscience and Nanotechnology Degree (UAB).
