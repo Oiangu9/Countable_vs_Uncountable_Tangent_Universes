@@ -7,7 +7,7 @@ if use_cuda_numpy:
 else:
     import numpy as cnp
 
-def chosenV(grid, R=4):
+def chosenV(grid, R=4, real_dtype=cnp.single):
     return 0.5*(grid[:,:,:,2]**2+(cnp.sqrt(grid[:,:,:,0]**2+grid[:,:,:,1]**2)-R)**2).astype(real_dtype)
 
 mus = cnp.array([4, 0, 0])

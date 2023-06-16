@@ -174,7 +174,7 @@ if __name__ == "__main__":
         image=f"{outputs_directory}/SE_3D/{ID_string}/figs/energy_potential.png"
         plt.savefig(image, dpi=150)
     except:
-        pass
+        os.makedirs(f"{outputs_directory}/SE_3D/{ID_string}/figs/", exist_ok=True)
 
     # Propagator #################################################
     U_L = cuda_get_discrete_U_L(*Ns, *dxs, dt, *ms, hbar)
