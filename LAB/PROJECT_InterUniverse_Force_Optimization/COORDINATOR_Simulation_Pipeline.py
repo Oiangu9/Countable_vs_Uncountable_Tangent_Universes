@@ -27,7 +27,7 @@ if __name__ == "__main__":
         Krange = [float(x) for x in f.readline().split("Krange ")[1].split('[')[1].split(']')[0].split(',')]
         Arange = [float(x) for x in f.readline().split("Arange ")[1].split('[')[1].split(']')[0].split(',')]
         dim = int(f.readline().split("dim ")[1])
-    if len(Krange)>2:
+    if len(Krange)!=2:
         Ks_to_try = Krange
         As_to_try = Arange
     else:

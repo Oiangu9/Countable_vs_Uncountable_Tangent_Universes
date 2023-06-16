@@ -460,12 +460,17 @@ if __name__ == "__main__":
         # (i,j) is the force of trajectory j on i-th
         # we sum all the inter-universe forces on i-th
         return all_forces.sum(axis=1) # sum over j
-    A = A/numTrajs
-    quantum_force = lambda trajs : inter_universe_force(trajs, A=A, K=K)
+    if A!=0:
+        A = A/numTrajs
+        quantum_force = lambda trajs : inter_universe_force(trajs, A=A, K=K)
 
-    inter_universe_forces = [
+        inter_universe_forces = [
             quantum_force
         ] # origin of quantum
+    else:
+        zeros=cnp.zeros((numTrajs, numDofUniv))
+        quantum_force = lambda trajs : zeros
+        inter_universe_forces = [quantum_force]
 
     # Simulator run ##############################
     # For the Verlet algorithm, saving at least 3 time iterations is necessary
