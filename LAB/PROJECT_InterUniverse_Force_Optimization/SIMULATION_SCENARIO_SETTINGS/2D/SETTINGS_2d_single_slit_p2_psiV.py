@@ -8,7 +8,7 @@ else:
     import numpy as cnp
 
 def chosenV(grid, Vmax=20, xbottnk=1, adiabty=2, 
-                   wmax=xuppers[1], wmin=1, k_super=6):
+                   wmax=10, wmin=1, k_super=6):
     '''wmin is half the slit width
     - wmax>wmin is expected
     - grid supposed to be [Nx,Ny,2]
