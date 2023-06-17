@@ -468,8 +468,7 @@ if __name__ == "__main__":
             quantum_force
         ] # origin of quantum
     else:
-        zeros=cnp.zeros((numTrajs, numDofUniv))
-        quantum_force = lambda trajs : zeros
+        quantum_force = lambda trajs : cnp.zeros((numTrajs, numDofUniv), dtype=real_dtype)
         inter_universe_forces = [quantum_force]
 
     # Simulator run ##############################
@@ -660,30 +659,29 @@ if __name__ == "__main__":
         dpi = 100
         fig = plt.figure( figsize=(14,7))
 
-        for it, t in enumerate(ts):
-            if it%outputEvery==0:
-                ##print(f"\n > It {it}/{numIts}")
+        for it, t in zip( np.arange(len(ts))[::outputEvery][::skip], ts[::outputEvery][::skip]):
+            ##print(f"\n > It {it}/{numIts}")
 
-                fig.clf()
-                pdf = np.load(f"{outputs_directory}/MIW/{ID_string}/pdf/pdf_it_{it}.npy")
-                trajs = np.load(f"{outputs_directory}/MIW/{ID_string}/trajs/trajs_it_{it}.npy")
+            fig.clf()
+            pdf = np.load(f"{outputs_directory}/MIW/{ID_string}/pdf/pdf_it_{it}.npy")
+            trajs = np.load(f"{outputs_directory}/MIW/{ID_string}/trajs/trajs_it_{it}.npy")
 
-                # PDF + POTENTIAL + TRAJECTORIES ##############################################
-                ax = fig.add_subplot(111)
-                ax.plot(grid_pdf[:,0], pdf, label="Probablity Density")
-                ax.set_xlabel("x")
-                ax.set_ylabel("pdf")
-                ax.set_title(f"Trajectories and Probability Density\n it={it} t={t:.4}")
-                plt.legend()
-                ax2=ax.twinx()
-                ax2.plot(grid_potential[:,0], potential_field, label="Potential", color=u'#ff7f0e')
-                ax2.plot(trajs[:,0], [np.mean(potential_field)]*numTrajs, 'o',color='black',
-                        markersize=1,label="Bohmian Trajectories")
-                ax2.set_ylabel("Potential")
-                image=f"{outputs_directory}/MIW/{ID_string}/figs/it_{it}.png"
-                plt.legend()
-                plt.savefig(image, dpi=dpi)
-                image_paths.append(image)
+            # PDF + POTENTIAL + TRAJECTORIES ##############################################
+            ax = fig.add_subplot(111)
+            ax.plot(grid_pdf[:,0], pdf, label="Probablity Density")
+            ax.set_xlabel("x")
+            ax.set_ylabel("pdf")
+            ax.set_title(f"Trajectories and Probability Density\n it={it} t={t:.4}")
+            plt.legend()
+            ax2=ax.twinx()
+            ax2.plot(grid_potential[:,0], potential_field, label="Potential", color=u'#ff7f0e')
+            ax2.plot(trajs[:,0], [np.mean(potential_field)]*numTrajs, 'o',color='black',
+                    markersize=1,label="Bohmian Trajectories")
+            ax2.set_ylabel("Potential")
+            image=f"{outputs_directory}/MIW/{ID_string}/figs/it_{it}.png"
+            plt.legend()
+            plt.savefig(image, dpi=dpi)
+            image_paths.append(image)
     # Generate gif
     import imageio
     fps=7
