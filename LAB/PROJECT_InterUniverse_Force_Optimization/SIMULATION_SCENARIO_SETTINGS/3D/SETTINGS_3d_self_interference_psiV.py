@@ -7,7 +7,7 @@ if use_cuda_numpy:
 else:
     import numpy as cnp
 
-def chosenV(grid, dtype=cnp.single):
+def chosenV(grid, real_dtype=cnp.single):
     return cnp.zeros(grid.shape[:-1], dtype=real_dtype)
 
 mus1 = cnp.array([0,3,3])
