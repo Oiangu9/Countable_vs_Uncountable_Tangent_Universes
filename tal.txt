@@ -1,9 +1,0 @@
-- Enfoke como que se ha decidido hacer un análisis explorativo más que explorativo, ya que no se había probado antes este approach (por eso será part I: exploratory), para ver que los efectos cuánticos se ven reflejados, pero mostrar cuáles son las pegas de los grides escasos probados. Y q part I incluía hacer todos los tests
-Gero berari jarri penie ezin izentela egin analisis explotatorixue. 
-- Explikeu Crank nikolsona erabili dotena apendice baten.
-- Explike gpu estrategixe eta paralelizaziño estrategixe apendice baten.
-- Y como no hay explotativo, ba gehitu diskusiñoa de por qué ese force function etc, y qué diferencia hay con lo que ya se ha probado. Ta gehitu zelan implemente ahalko zan en molecular dynamics, eta zer diferentzi con las suyas. 
-- Sekziño bat de posibles mejoras gehitu.
-
-- Ta behin dana idatzitze dauela ein repositorixue arregletien kontue eta ipini sandbox bat ondo expliketa nahi deuenak erabili dezan digamos. tanto scripts de python como en notebooks.
-
