@@ -167,7 +167,7 @@ if __name__ == "__main__":
         ax.set_ylabel("y")
         ax.set_zlabel("z")
         ax.set_title(f"Potential energy>{maxim/3:.3}")
-        ax.view_init(elev=30, azim=30)
+        #ax.view_init(elev=30, azim=30)
         ax.scatter(trajs_numpy[:,0], trajs_numpy[:,1], trajs_numpy[:,2], c="black", s=3,
                     alpha=1)
         os.makedirs(f"{outputs_directory}/SE_3D/{ID_string}/figs/", exist_ok=True)
@@ -333,7 +333,7 @@ if __name__ == "__main__":
         ax.set_xlim((xlowers[0], xuppers[1]))
         ax.set_ylim((xlowers[1], xuppers[1]))
         ax.set_zlim((xlowers[2], xuppers[2]))
-        ax.view_init(elev=-30, azim=30)
+        #ax.view_init(elev=-30, azim=30)
 
         fig.colorbar(colormap, fraction=0.04, location='left')
         ax.set_xlabel("x")
@@ -354,7 +354,7 @@ if __name__ == "__main__":
         ax.set_ylabel("y")
         ax.set_zlabel("z")
         fig.colorbar(colormap, fraction=0.04, location='bottom', ax=ax)
-        ax.view_init(elev=-30, azim=30)
+        #ax.view_init(elev=-30, azim=30)
 
         # PDF + TRAJECTORIES ##############################################
         ax = fig.add_subplot(133, projection='3d')
@@ -370,7 +370,7 @@ if __name__ == "__main__":
         ax.set_title(f"Trajectories and Projected Probability Density Contours\n it={it} t={t:.4}")
         ax.scatter(trajs[:,0], trajs[:,1], trajs[:,2], c="white", s=3,
                     alpha=0.7)
-        ax.view_init(elev=-30, azim=30)
+        #ax.view_init(elev=-30, azim=30)
 
         image=f"{outputs_directory}/SE_3D/{ID_string}/figs/it_{it}.png"
         plt.savefig(image, dpi=dpi)
