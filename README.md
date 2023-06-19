@@ -1,15 +1,22 @@
 # Countable or Uncountable Tangent Universes?
 #### Contents
-[1. Repository Structure and Contents](#B)
+[1. Repository Structure and Contents](#A)
 
-[2. Dependencies](#C)
+[2. Dependencies](#B)
 
-[3. Brief Theoretical Backgroung](#A)
+[3. Brief Theoretical Backgroung](#C)
 
 [4. Bibliography](#D)
 
 
-##  <a id="A">(3.)</a> Brief Theoretical Background:
+##  <a id="A">(1.)</a> Repository Structure and Contents
+Explanation of how to use each script. Examples. WIP.
+
+##  <a id="B">(2.)</a> Dependencies
+List of Python packages required to execute the code and CUDA version. WIP.
+
+
+##  <a id="C">(3.)</a> Brief Theoretical Background:
 ### A Quantum Universe is just a Fluid of Classical Universes
 
 Consider a non-relativistic isolated system of $n\in\mathbb{N}$ degrees of freedom $\vec x=(x_1,...,x_n)\in\mathbb{R}^n$, e.g. the system of all the particles in the Universe. According to quantum mechanics, their state in each time $t$ is given by the complex wavefunction $\psi(\vec x,t)$, the dynamics of which in time are given by the Schrödinger Equation, 
@@ -73,7 +80,7 @@ Even if this was not true, the fact is that, there is a priori no argument again
  An ensemble of tangent Universes like these would be compatible with the fact we perceive particles as point-like and have never experienced an actual superposition. The randomness of quantum mechanics would be due to the fact that we cannot know our trajectory's label $\vec \xi$ (for we cannot access all the degrees of freedom of the Universe at the same time), but physics would this way be deterministic at the ontological level. The collapse of the wavefunction and the closed quantum system Schrödinger Equation for any subsystem of the Universe, would then be derived (not postulated) following a similar procedure to [[7](#7)].
 
 
-## Bibliography
+##  <a id="A">(4.)</a> Bibliography:
 <a id="r1">[1]</a> 
 Bohm, David. *"A suggested interpretation of the quantum theory in terms of" hidden" variables. I."* Physical review 85.2 (1952): 166.
 
